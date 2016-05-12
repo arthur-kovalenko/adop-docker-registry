@@ -7,18 +7,15 @@ else
 fi
 
 ######################### FIND THE REGISTRY PUBLIC IP #########################
-if REGISTRY_IP==X.X.X.X; then
+if [ $REGISTRY_IP == "X.X.X.X" ]; then
     echo "Retrieving Registry Public IP"
-    apt-get update
-    apt-get install -y dnsutils
-    apt-get autoclean
-    rm -rf /var/lib/apt/lists/*
     REGISTRY_IP=$(dig +short myip.opendns.com @resolver1.opendns.com)
 else
-    echo "Using Supplied Public IP"
+    echo "Using Supplied Public IP $REGISTRY_IP"
 fi
 ######################### FIND THE REGISTRY PUBLIC IP #########################)
-
+# Get registry private IP
+PRIVATE_IP=$(ip addr | grep eth0 | awk '/inet / {sub(/\/.*/, "", $2); print $2}')
 
 ####################################################    GENERATE A CA AND USE THAT TO SIGN A CERTIFFICATE   #################################################
 function Create_Root_Directories {
@@ -104,20 +101,18 @@ function Simple_Cert_Generator {
 }
 
 function Configure_Openssl {
-    #PRIVATE_IP=$(ip addr | grep eth0 | awk '/inet / {sub(/\/.*/, "", $2); print $2}')
-    PRIVATE_IP=$BASE_HOST_IP
     sed -i -e "s/52.16.63.143/${REGISTRY_IP},IP:${PRIVATE_IP}/g" /etc/ssl/openssl.cnf
 
 }
 
 function Copy_Certs {
-    mkdir -p /certs/certs.d/${REGISTRY_IP}\:5500/
-    mkdir -p /certs/certs.d/${PRIVATE_IP}\:5500/
+    mkdir -p /data/certs/certs.d/${REGISTRY_IP}\:5500/
+    mkdir -p /data/certs/certs.d/${PRIVATE_IP}\:5500/
     mkdir -p /registry_certs
     cp /data/ca/registry.crt /registry_certs/registry.crt
     cp /data/ca/registry.key /registry_certs/registry.key
-    cp /data/ca/registry.crt /certs/certs.d/${REGISTRY_IP}\:5500/ca.crt
-    cp /data/ca/registry.crt /certs/certs.d/${PRIVATE_IP}\:5500/ca.crt
+    cp /data/ca/registry.crt /data/certs/certs.d/${REGISTRY_IP}\:5500/ca.crt
+    cp /data/ca/registry.crt /data/certs/certs.d/${PRIVATE_IP}\:5500/ca.crt
 }
 
 
@@ -142,7 +137,7 @@ else
     if ! ls /certs | grep "registry.crt"; then
         echo "Certifficate not in the expected directory"
         if ! ls /data/ca | grep "registry.crt"; then
-            echo "Certifficate never created and not supplied. Creating new certifficate"
+            echo "Certifficate never created nor is supplied. Creating new certifficate"
             Configure_Openssl
             Simple_Cert_Generator
         fi
@@ -152,4 +147,4 @@ else
 fi
 
 # Execute the standard command
-/bin/registry /etc/docker/registry/config.yml
+/bin/registry serve /etc/docker/registry/config.yml

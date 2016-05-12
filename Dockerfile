@@ -3,7 +3,10 @@ FROM registry:2
 MAINTAINER Georgi Dimitrov <georgi.dimitrov>
 
 # always try to install openssl and create a directory /root/openssl
-RUN apt-get install -y openssl
+RUN apt-get update && \
+	apt-get install openssl dnsutils -y && \
+	apt-get clean && \
+	rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /data/
 
 #ENV SOMEVAR
