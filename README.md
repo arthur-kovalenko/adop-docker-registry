@@ -1,3 +1,11 @@
+#Deprecated: Simpler alternative is to use plain docker registry, with an "--insecure-registry" flag
+
+##Important
+
+It is not recoomended to use self-signed certificates with Docker registry. From localhost (meanign if you wish to use docker registry only on single machine, without any other machines connecting to it), any Docker registry can function properly even without SSL certificates or "--insecure-registry" flag. 
+
+This repository is left as an example of how to implement self-signed SSL certificates, that can be extended to use properones on generate them using Let's Encrypt. 
+
 #Supported tags and respective Dockerfile links
 
 - [`0.0.1`](https://github.com/Accenture/adop-registry/blob/master/Dockerfile.md)
